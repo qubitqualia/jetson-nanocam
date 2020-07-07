@@ -1,8 +1,12 @@
 #!/usr/bin/python3
 
 import gi
+import socket
+import threading
+import uuid
 import monitor_service
 import time
+import cv2
 
 gi.require_version('Gst', '1.0')
 
@@ -40,9 +44,7 @@ class Enum:
     ENCODER_NVV4L2H264 = 4
     ENCODER_NVV4L2H265 = 5
     ENCODER_NVV4L2VP8 = 6
-    ENCODER_NVV4L2VP9 = 7
-
-
+    ENCODER_NVV4L2VP9 = 7 
 
 class CSIcamera:
     def __init__(self):
@@ -283,6 +285,7 @@ class CSIcamera:
             val = "false"
         self.cam_props[idx]["val"] = val
 
+
 class GstBackEnd:
     def __init__(self):
         self.loop = None
@@ -337,6 +340,165 @@ class GstBackEnd:
             return
 
         return True
+
+class MediaClient:
+    def __init__(self, host, port):
+        self.hostip = host
+        self.port = port
+        self.media_path = 'C:\\Users\\jmatt\\RemoteMedia\\'
+        self.sock = socket.socket()
+
+    def connect(self):
+        self.sock.connect((self.hostip, self.port))
+
+    def fetch_image(self, width=3280, height=2464, display=False):
+
+        # Download image from server
+        fname = str(uuid.uuid4()) + '.jpg'
+        rcvfile = open(self.media_path + fname, 'wb')
+        msg = "image@" + str(width) + ',' + str(height)
+        self.sock.send(msg.encode())
+        print("Downloading image file from server...")
+        while True:
+            data = self.sock.recv(1024)
+            if data == b"DONE":
+                print("File transfer complete!")
+                break
+            rcvfile.write(data)
+        rcvfile.close()
+
+        # Import image into OpenCV
+        img = cv2.imread(self.media_path + fname)
+
+        if display:
+            cv2.imshow('image', img)
+            cv2.waitKey(0)
+
+        return img
+
+    def fetch_video(self, duration, width=3280, height=2464, display=False):
+
+        # Download video from server
+        fname = str(uuid.uuid4()) + '.mp4'
+        rcvfile = open(self.media_path + fname, 'wb')
+        msg = "video@" + str(width) + ',' + str(height) + '@' + str(duration)
+        self.sock.send(msg.encode())
+        print("Downloading video file from server...")
+        while True:
+            data = self.sock.recv(1024)
+            if data == b"DONE":
+                print("File transfer complete!")
+                break
+            rcvfile.write(data)
+        rcvfile.close()
+
+        # Import video into OpenCV
+        vid = cv2.VideoCapture(self.media_path + fname)
+
+        if display:
+            while vid.isOpened():
+                ret, frame = vid.read()
+                cv2.imshow('frame', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+            vid.release()
+            cv2.destroyAllWindows()
+
+        return vid
+
+class MediaServer:
+    def __init__(self, port):
+        self.port = port
+        self.media_path = '/home/justin/media/'
+        self.sock = socket.socket()
+        self.sock.bind(('0.0.0.0', self.port))
+        self.sock.listen(1)
+        self.CLIENT_CONNECTED = False
+        self.conn = None
+        self.addr = None
+        self.csicam = CSIcamera()
+        self.csicam.set_flip_method(2)
+
+    def start(self):
+
+        while True:
+
+            # Establish socket connection with client [BLOCKING]
+            if not self.CLIENT_CONNECTED:
+                self.conn, self.addr = self.sock.accept()
+                self.CLIENT_CONNECTED = True
+
+            # Receive requests from client [BLOCKING]
+            msg = self.conn.recv(1024).decode()
+
+            # Valid requests: 'image@wwww,hhhh', where wwww = width, hhhh = height
+            #                 'video@wwww,hhhh@xx', where xx is the duration in seconds
+            msg_split = msg.split('@')
+
+            if msg_split[0] == 'image':
+                res_str = msg_split[1].split(',')
+                w = int(res_str[0])
+                h = int(res_str[1])
+                f = self.get_image(w, h)
+                self.send_file(f)
+            elif msg_split[0] == 'video':
+                res_str = msg_split[1].split(',')
+                w = int(res_str[0])
+                h = int(res_str[1])
+                dur = int(msg_split[2])
+                f = self.get_video(w, h, dur)
+                self.send_file(f)
+            elif msg_split[0] == '':
+                # Connection closed by client
+                self.CLIENT_CONNECTED = False
+                self.start()
+
+    def get_image(self, w, h):
+        # Update CSI camera
+        self.csicam.set_resolution(w, h)
+
+        # Unique filename
+        fname = str(uuid.uuid4()) + '.jpg'
+
+        # Initialize Imager and grab image
+        imager = Imager(self.csicam, self.media_path + fname)
+        imager.grabimg()
+
+        return fname
+
+    def get_video(self, w, h, dur):
+        # Update CSI camera
+        self.csicam.set_resolution(w, h)
+        self.csicam.set_timeout(dur)
+
+        # Unique filename
+        fname = str(uuid.uuid4()) + '.mp4'
+
+        # Initialize Filestream and grab video
+        fstream = FileStream(self.csicam, self.media_path + fname)
+        fstream.start()
+
+        return fname
+
+    def send_file(self, f):
+        sendfile = open(self.media_path + f, "rb")
+        data = sendfile.read(1024)
+        while data:
+            self.conn.send(data)
+            data = sendfile.read(1024)
+        sendfile.close()
+        time.sleep(0.5)
+        self.conn.send(b"DONE")
+
+
+
+
+
+
+
+
+
 
 
 
@@ -433,6 +595,107 @@ class UDPStreamOut:
 
         return
 
+class Imager:
+    def __init__(self, csicam, outfile):
+        self.csicam = csicam
+        self.outfile = outfile
+        self.Gstobj = GstBackEnd()
+        self.cycles = 0
+        self.resolution = None
+        self.flip_method = None
+        self.Gstobj.init()
+        self.create_elements()
+
+    def grabimg(self):
+        if self.Gstobj.cycles != 0:
+            self.Gstobj.init()
+            self.create_elements()
+
+        self.Gstobj.pipeline.set_state(Gst.State.PLAYING)
+        try:
+
+            self.Gstobj.loop.run()
+
+        except Exception as e:
+
+            print(e)
+
+        # Cleanup
+        self.Gstobj.pipeline.set_state(Gst.State.NULL)
+        self.Gstobj.loop = None
+        self.Gstobj.pipeline = None
+        self.Gstobj.bus = None
+        self.Gstobj.cycles += 1
+        self.cycles += 1
+
+        print("Completed cleanup")
+
+    def create_elements(self):
+        self.resolution = self.csicam.get_resolution()
+        if self.resolution is None:
+            self.resolution = [3280, 2464]
+
+        self.flip_method = self.csicam.get_flip_method()
+        if self.flip_method is None:
+            self.flip_method = 0
+
+        self.framerate = self.csicam.get_framerate()
+        if self.framerate is None:
+            self.framerate = 20
+
+        # CSI camera source
+        videosrc = Gst.ElementFactory.make('nvarguscamerasrc', "src")
+
+        for _dict in self.csicam.cam_props:
+            if "label" in _dict:
+                label = _dict["label"]
+                if _dict["val"] is not None:
+                    if label == "num-buffers":
+                        val = 1
+                    else:
+                        val = _dict["val"]
+                    videosrc.set_property(label, val)
+                else:
+                    if label == "num-buffers":
+                        val = 1
+                        videosrc.set_property(label, val)
+
+        # Caps filter for CSI <--> nvvidconv
+        caps_convert_src = Gst.ElementFactory.make("capsfilter", "nvmm_caps")
+        caps_convert_src.set_property('caps', Gst.Caps.from_string(
+            "video/x-raw(memory:NVMM), width=(int)" + str(self.resolution[0]) + " , height=(int)" +
+            str(self.resolution[1]) + " , format=(string)NV12, framerate=(fraction)" +
+            str(self.framerate) + "/1"))
+
+        # Convert element
+        convert = Gst.ElementFactory.make("nvvidconv", "convert")
+        convert.set_property("flip-method", self.flip_method)
+
+        # Encoder element
+        encode = Gst.ElementFactory.make("nvjpegenc", "encode")
+
+        # Filesink element
+        sink = Gst.ElementFactory.make("filesink", 'sink')
+        sink_split = self.outfile.split('.')
+        sink_str = sink_split[0] + str(self.cycles) + '.' + sink_split[1]
+        sink.set_property("location", sink_str)
+
+        # Add elements
+
+        self.Gstobj.pipeline.add(videosrc)
+        self.Gstobj.pipeline.add(caps_convert_src)
+        self.Gstobj.pipeline.add(convert)
+        self.Gstobj.pipeline.add(encode)
+        self.Gstobj.pipeline.add(sink)
+
+        # Link elements
+        videosrc.link(convert)
+        convert.link(caps_convert_src)
+        caps_convert_src.link(encode)
+        encode.link(sink)
+
+        return
+
 
 class FileStream:
     def __init__(self, csicam, outfile, encoder=None):
@@ -471,7 +734,6 @@ class FileStream:
         self.cycles += 1
 
         print("Completed cleanup")
-
 
     def create_elements(self):
 
