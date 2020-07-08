@@ -19,13 +19,13 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gstreamer.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gstreamer.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Added MediaServer and MediaClient classes for TCP transfers">
+      <change afterPath="$PROJECT_DIR$/NanoCamClient.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media_test_client.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/NanoCam.py" beforeDir="false" afterPath="$PROJECT_DIR$/NanoCam.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/monitor_service.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,6 +75,32 @@
       <option name="USE_PATTERN" value="false" />
       <method />
     </configuration>
+    <configuration name="media_test_client" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="gstreamer" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/media_test_client.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.media_test_client" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -87,6 +113,14 @@
       <option name="presentableId" value="Default" />
       <updated>1593881190440</updated>
     </task>
+    <task id="LOCAL-00001" summary="Added MediaServer and MediaClient classes for TCP transfers">
+      <created>1594164457371</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1594164457371</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -109,11 +143,35 @@
       <collection />
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added MediaServer and MediaClient classes for TCP transfers" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added MediaServer and MediaClient classes for TCP transfers" />
+  </component>
   <component name="WindowStateProjectService">
+    <state x="1038" y="284" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1594170668080">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state x="1038" y="284" key="#com.intellij.fileTypes.FileTypeChooser/69.0.1607.943@69.0.1607.943" timestamp="1594170668080" />
     <state x="698" y="188" key="FileChooserDialogImpl" timestamp="1594156419782">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
     <state x="698" y="188" key="FileChooserDialogImpl/69.0.1607.943@69.0.1607.943" timestamp="1594156419782" />
+    <state width="1296" height="233" key="GridCell.Tab.0.bottom" timestamp="1594169848295">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state width="1296" height="233" key="GridCell.Tab.0.bottom/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
+    <state width="1296" height="233" key="GridCell.Tab.0.center" timestamp="1594169848295">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state width="1296" height="233" key="GridCell.Tab.0.center/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
+    <state width="1296" height="233" key="GridCell.Tab.0.left" timestamp="1594169848295">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state width="1296" height="233" key="GridCell.Tab.0.left/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
+    <state width="1296" height="233" key="GridCell.Tab.0.right" timestamp="1594169848295">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state width="1296" height="233" key="GridCell.Tab.0.right/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
     <state x="310" y="77" key="SettingsEditor" timestamp="1594076874331">
       <screen x="69" y="0" width="1467" height="864" />
     </state>
