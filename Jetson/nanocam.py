@@ -1,7 +1,9 @@
 import gi
 import numpy
+import time
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
+
 
 
 class StreamBus:
@@ -41,8 +43,6 @@ class GstBackEnd:
         self.pipeline = None
         self.bus = None
         self.cycles += 1
-
-        print("Completed cleanup")
 
     def bus_call(self, bus, msg, *args):
         if msg.type == Gst.MessageType.EOS:
@@ -387,13 +387,18 @@ class VideoStream:
         self.encoder = None
         self.img_array = []
         self.Gstobj.init()
-        self.create_elements()
+
 
     def connect_camera(self, cam):
         if not self.CAMERASRC:
             print("Cannot connect camera because object is not configured to use a camera source...ignoring")
         else:
             self.csicam = cam
+            self.csicam.set_resolution(3280, 2464)
+            self.csicam.set_capture_format("NV12")
+            self.csicam.set_framerate(20)
+            self.csicam.set_flip_method(2)
+            self.csicam.set_timeout(self.duration)
 
     def set_timeout(self, duration):
         if self.CAMERASRC and self.csicam is not None:
@@ -423,8 +428,8 @@ class VideoStream:
         if self.Gstobj.cycles != 0:
             self.Gstobj.init()
             self.img_array = []
-            self.create_elements()
 
+        self.create_elements()
         self.Gstobj.start()
         StreamBus.KILL_THREAD = False
         self.cycles += 1
@@ -463,7 +468,7 @@ class VideoStream:
             rate = self.csicam.get_framerate()
             vidcaps.set_property('caps', Gst.caps_from_string('video/x-raw(memory:NVMM), width=(int)' + str(res[0])
                                  + ',' + ' height=(int)' + str(res[1]) + ',' + ' format=(string)' + format
-                                 + ',' + ' framerate=(fraction)' +  str(rate) + '/1'))
+                                 + ',' + ' framerate=(fraction)' + str(rate) + '/1'))
 
             # Create nvvidconv element
             nvidconv = Gst.ElementFactory.make('nvvidconv', 'convert')
@@ -472,8 +477,7 @@ class VideoStream:
             # Create output caps
             outcaps = Gst.ElementFactory.make('capsfilter', 'outcaps')
             outcaps.set_property('caps', Gst.caps_from_string('video/x-raw, width=(int)' + str(self.output_res[0]) + ','
-                                 + ' height=(int)' + str(self.output_res[1]) + ',' + ' format=(string)' + format + ','
-                                 + ' framerate=(fraction)' + str(rate) + '/1'))
+                                 + ' height=(int)' + str(self.output_res[1])))
 
             # Add elements to list
             gst_elements.append(videosrc)
@@ -557,7 +561,7 @@ class VideoStream:
         elif self.APPSINK:
             sink = Gst.ElementFactory.make('appsink', 'sink')
             sink.set_property('emit-signals', True)
-            caps2 = Gst.caps_from_string('video\x-raw, format=(string){BGR, GRAY8}')
+            caps2 = Gst.caps_from_string('video/x-raw, format=(string)BGR')
             sink.set_property("caps", caps2)
             sink.connect("new-sample", self.new_buffer, sink)
 
@@ -583,7 +587,7 @@ class VideoStream:
 
         # Link elements
         last = len(gst_elements) - 2
-        for i, elem in gst_elements:
+        for i, elem in enumerate(gst_elements):
             if i <= last:
                 elem.link(gst_elements[i+1])
             else:
@@ -628,12 +632,19 @@ class ImageStream:
         self.cycles = 0
         self.img_array = []
         self.fnames_array = []
+        self.tnow = time.time()
+        self.tinit = time.time()
         self.output_res = [1920, 1080]
         self.Gstobj.init()
-        self.create_elements()
+        #self.create_elements()
 
     def connect_camera(self, cam):
         self.csicam = cam
+        self.csicam.set_resolution(3280, 2464)
+        self.csicam.set_capture_format("NV12")
+        self.csicam.set_framerate(20)
+        self.csicam.set_flip_method(2)
+        self.csicam.set_exposure_time(100000, 200000)
 
     def set_output_resolution(self, width, height):
         self.output_res = [width, height]
@@ -654,22 +665,23 @@ class ImageStream:
         self.img_array = []
 
         while True:
-            if self.Gstobj.cycles != 0:
+            self.tnow = time.time()
+
+            if self.tnow - self.tinit >= self.interval:
+                self.tinit = time.time()
                 self.Gstobj.init()
                 self.create_elements()
+                self.Gstobj.start()
+                self.cycles += 1
+                print("Completed cleanup")
 
-            self.Gstobj.start()
-            self.Gstobj.pipeline.set_state(Gst.State.PLAYING)
-            self.cycles += 1
-            print("Completed cleanup")
-
-            if self.cycles == self.frames:
-                self.cycles = 0
-                if self.APPSINK:
-                    return self.img_array
-                elif self.FILESINK:
-                    arr = []
-                    return self.fnames_array
+                if self.cycles == self.frames:
+                    self.cycles = 0
+                    if self.APPSINK:
+                        return self.img_array
+                    elif self.FILESINK:
+                        arr = []
+                        return self.fnames_array
 
     def create_elements(self):
 
@@ -684,10 +696,10 @@ class ImageStream:
                 label = _dict["label"]
                 val = _dict["val"]
 
-                # Override 'num-buffers' to only collect 1 frame
+                # Override 'num-buffers' to only collect 20 frames
                 if label == "num-buffers":
                     videosrc.set_property(label, 1)
-                elif label != "timeout":
+                elif label != "timeout" and val is not None:
                     videosrc.set_property(label, val)
 
         # Create caps for videosrc
@@ -707,9 +719,7 @@ class ImageStream:
         # Create output caps
         outcaps = Gst.ElementFactory.make('capsfilter', 'outcaps')
         outcaps.set_property('caps', Gst.caps_from_string('video/x-raw, width=(int)' + str(self.output_res[0]) + ','
-                                                          + ' height=(int)' + str(self.output_res[1]) + ',' +
-                                                          ' format=(string)' + format + ',' + ' framerate=(fraction)'
-                                                          + str(rate) + '/1'))
+                                                          + ' height=(int)' + str(self.output_res[1])))
 
         # Add elements to list
         gst_elements.append(videosrc)
@@ -717,9 +727,11 @@ class ImageStream:
         gst_elements.append(nvidconv)
         gst_elements.append(outcaps)
 
+
         # Create encoder element
         encoder = Gst.ElementFactory.make('nvjpegenc', 'encoder')
         gst_elements.append(encoder)
+
 
         # Create sink
         if self.FILESINK:
@@ -736,7 +748,7 @@ class ImageStream:
         elif self.APPSINK:
             sink = Gst.ElementFactory.make('appsink', 'sink')
             sink.set_property('emit-signals', True)
-            caps2 = Gst.caps_from_string('video\x-raw, format=(string){BGR, GRAY8}')
+            caps2 = Gst.caps_from_string('video/x-raw, format=(string){BGR, GRAY8}')
             sink.set_property("caps", caps2)
             sink.connect("new-sample", self.new_buffer, sink)
 
@@ -748,8 +760,9 @@ class ImageStream:
 
         # Link elements
         last = len(gst_elements) - 2
-        for i, elem in gst_elements:
+        for i, elem in enumerate(gst_elements):
             if i <= last:
+                print("Linking {} to {}".format(elem, gst_elements[i+1]))
                 elem.link(gst_elements[i + 1])
             else:
                 break
