@@ -19,13 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Added MediaServer and MediaClient classes for TCP transfers">
-      <change afterPath="$PROJECT_DIR$/NanoCamClient.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/media_test_client.py" afterDir="false" />
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="In process of re-writing to enable streaming to multiple different endpoints">
+      <change afterPath="$PROJECT_DIR$/Jetson/networking.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/NanoCam.py" beforeDir="false" afterPath="$PROJECT_DIR$/NanoCam.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/monitor_service.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/NanoCam.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/nanocam.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/NanoCamClient.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gst_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media_test_client.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +55,11 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../Birdfeeder" />
     <property name="settings.editor.selected.configurable" value="Errors" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\jmatt\PycharmProjects\NanoCam\Jetson" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration default="true" type="tests" factoryName="Attests">
@@ -120,7 +126,14 @@
       <option name="project" value="LOCAL" />
       <updated>1594164457371</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="In process of re-writing to enable streaming to multiple different endpoints">
+      <created>1594242658856</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1594242658856</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -145,13 +158,18 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added MediaServer and MediaClient classes for TCP transfers" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added MediaServer and MediaClient classes for TCP transfers" />
+    <MESSAGE value="In process of re-writing to enable streaming to multiple different endpoints" />
+    <option name="LAST_COMMIT_MESSAGE" value="In process of re-writing to enable streaming to multiple different endpoints" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1038" y="284" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1594170668080">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
     <state x="1038" y="284" key="#com.intellij.fileTypes.FileTypeChooser/69.0.1607.943@69.0.1607.943" timestamp="1594170668080" />
+    <state x="602" y="218" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1594388541274">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state x="602" y="218" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/69.0.1607.943@69.0.1607.943" timestamp="1594388541274" />
     <state x="698" y="188" key="FileChooserDialogImpl" timestamp="1594156419782">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
@@ -176,5 +194,9 @@
       <screen x="69" y="0" width="1467" height="864" />
     </state>
     <state x="310" y="77" key="SettingsEditor/69.0.1467.864@69.0.1467.864" timestamp="1594076874331" />
+    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup" timestamp="1594250935311">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup/69.0.1607.943@69.0.1607.943" timestamp="1594250935311" />
   </component>
 </project>
