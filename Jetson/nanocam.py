@@ -1,6 +1,9 @@
 import gi
 import numpy
 import time
+import os
+from pathlib import Path
+
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
 
@@ -626,12 +629,17 @@ class ImageStream:
             self.FILESINK = True
 
         self.csicam = None
+        self.tmppath = "/home/justin/media/tmp/"
+        self.tmpname = "tmp%05d.jpg"
         self.frames = frames
         self.interval = interval
+        self.delay_frames = 20
         self.Gstobj = GstBackEnd()
         self.cycles = 0
         self.img_array = []
         self.fnames_array = []
+        self.new_start = 0
+        #self.old_fnames_array = []
         self.tnow = time.time()
         self.tinit = time.time()
         self.output_res = [1920, 1080]
@@ -644,7 +652,7 @@ class ImageStream:
         self.csicam.set_capture_format("NV12")
         self.csicam.set_framerate(20)
         self.csicam.set_flip_method(2)
-        self.csicam.set_exposure_time(100000, 200000)
+
 
     def set_output_resolution(self, width, height):
         self.output_res = [width, height]
@@ -663,6 +671,7 @@ class ImageStream:
 
     def start_stream(self):
         self.img_array = []
+        self.fnames_array = []
 
         while True:
             self.tnow = time.time()
@@ -672,16 +681,36 @@ class ImageStream:
                 self.Gstobj.init()
                 self.create_elements()
                 self.Gstobj.start()
+                self.extract_image()
                 self.cycles += 1
                 print("Completed cleanup")
 
                 if self.cycles == self.frames:
                     self.cycles = 0
+                    self.new_start += 1
                     if self.APPSINK:
                         return self.img_array
                     elif self.FILESINK:
-                        arr = []
                         return self.fnames_array
+
+    def extract_image(self):
+        fname_base = self.tmpname.split('%')[0]
+        fname = self.tmppath + fname_base + '000' + str(self.delay_frames - 1) + '.jpg'
+        os.rename(fname, self.fnames_array[-1])
+        os.system('rm -rf %s*' % self.tmppath)
+
+
+
+        #cap = cv2.VideoCapture(self.tmppath)
+        #idx = 0
+        #while cap.isOpened():
+        #    ret, frame = cap.read()
+        #    if idx == self.delay_time - 2:
+        #        cv2.imwrite(self.fnames_array[-1], frame)
+        #        break
+        #    idx += 1
+        #cap.release()
+
 
     def create_elements(self):
 
@@ -698,7 +727,7 @@ class ImageStream:
 
                 # Override 'num-buffers' to only collect 20 frames
                 if label == "num-buffers":
-                    videosrc.set_property(label, 1)
+                    videosrc.set_property(label, self.delay_frames)
                 elif label != "timeout" and val is not None:
                     videosrc.set_property(label, val)
 
@@ -735,15 +764,20 @@ class ImageStream:
 
         # Create sink
         if self.FILESINK:
-            sink = Gst.ElementFactory.make('filesink', 'sink')
+            sink = Gst.ElementFactory.make('multifilesink', 'sink')
             if self.cycles > 0:
                 fname_split = self.outfile.split('.')
-                sink_str = fname_split[0] + str(self.cycles) + '.' + fname_split[1]
+                sink_str = fname_split[0] + '_run_' + str(self.new_start) + '_frame_' + str(self.cycles) + '.' + fname_split[1]
                 self.fnames_array.append(sink_str)
-                sink.set_property('location', sink_str)
+
             else:
-                self.fnames_array.append(self.outfile)
-                sink.set_property('location', self.outfile)
+                fname_split = self.outfile.split('.')
+                sink_str = fname_split[0] + '_run_' + str(self.new_start) + '_frame_0.jpg'
+                self.fnames_array.append(sink_str)
+
+            sink.set_property('location', self.tmppath + self.tmpname)
+            #tmp_split = self.tmpname.split('.')
+            #self.old_fnames_array.append(self.tmppath + tmp_split[0] + str(self.delay_frames - 1) + '.jpg')
 
         elif self.APPSINK:
             sink = Gst.ElementFactory.make('appsink', 'sink')

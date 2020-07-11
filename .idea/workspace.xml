@@ -19,7 +19,7 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Completely rewrote package">
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Verified VideoStream and ImageStream classes are working for save-to-file">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Jetson/nanocam.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/nanocam.py" afterDir="false" />
     </list>
@@ -135,7 +135,14 @@
       <option name="project" value="LOCAL" />
       <updated>1594395387549</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Verified VideoStream and ImageStream classes are working for save-to-file">
+      <created>1594408473548</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1594408473548</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -162,7 +169,8 @@
     <MESSAGE value="Added MediaServer and MediaClient classes for TCP transfers" />
     <MESSAGE value="In process of re-writing to enable streaming to multiple different endpoints" />
     <MESSAGE value="Completely rewrote package" />
-    <option name="LAST_COMMIT_MESSAGE" value="Completely rewrote package" />
+    <MESSAGE value="Verified VideoStream and ImageStream classes are working for save-to-file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Verified VideoStream and ImageStream classes are working for save-to-file" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1038" y="284" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1594170668080">
@@ -197,9 +205,9 @@
       <screen x="69" y="0" width="1467" height="864" />
     </state>
     <state x="310" y="77" key="SettingsEditor/69.0.1467.864@69.0.1467.864" timestamp="1594076874331" />
-    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup" timestamp="1594250935311">
+    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup" timestamp="1594429240682">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup/69.0.1607.943@69.0.1607.943" timestamp="1594250935311" />
+    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup/69.0.1607.943@69.0.1607.943" timestamp="1594429240682" />
   </component>
 </project>
