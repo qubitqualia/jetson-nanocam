@@ -2,7 +2,9 @@ import gi
 import numpy
 import time
 import os
-from pathlib import Path
+import sys
+import uuid
+from datetime import datetime
 
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
@@ -22,7 +24,7 @@ class GstBackEnd:
 
     def init(self):
         if self.cycles == 0:
-            Gst.init(None)
+            Gst.init(sys.argv)
 
         GObject.threads_init()
         self.loop = GObject.MainLoop()
@@ -30,8 +32,12 @@ class GstBackEnd:
         self.bus = self.pipeline.get_bus()
         self.bus.add_watch(0, self.bus_call, self.loop)
 
+    def quit(self):
+        self.pipeline.send_event(Gst.Event.new_eos())
+
     def start(self):
         self.pipeline.set_state(Gst.State.PLAYING)
+        print("Starting pipeline")
         try:
 
             self.loop.run()
@@ -48,6 +54,14 @@ class GstBackEnd:
         self.cycles += 1
 
     def bus_call(self, bus, msg, *args):
+
+        if StreamBus.KILL_THREAD:
+            print("INSIDE BUS")
+            self.pipeline.send_event(Gst.Event.new_eos())
+            self.loop.quit()
+
+            return
+
         if msg.type == Gst.MessageType.EOS:
 
             print("End-of-stream")
@@ -64,11 +78,18 @@ class GstBackEnd:
 
             return
 
-        elif msg.type == Gst.MessageType.DURATION_CHANGED:
-            if StreamBus.KILL_THREAD:
-                self.loop.quit()
-                return
+        #elif msg.type == Gst.MessageType.STATE_CHANGED:
+        #    if isinstance(msg.src, Gst.Pipeline):
+        #        old_state, new_state, pending_state = msg.parse_state_changed()
+        #        print("Pipeline state changed from {} to {}.".format(old_state.value_nick, new_state.value_nick))
 
+        #elif msg.type == Gst.MessageType.ELEMENT:
+        #    print("UDP packets stopped...closing pipeline")
+        #    self.pipeline.send_event(Gst.Event.new_eos())
+        #    self.loop.quit()
+
+        #else:
+            #print("Unexpected bus message received: {}".format(msg.type))
 
         return True
 
@@ -349,7 +370,8 @@ class CSIcamera:
 
 
 class VideoStream:
-    def __init__(self, duration, src=None, sink=None, outfile=None):
+    def __init__(self, duration, src=None, sink=None):
+        self.media_path = "/home/justin/media/"
         self.CAMERASRC = False
         self.UDPSRC = False
         self.APPSRC = False
@@ -357,6 +379,7 @@ class VideoStream:
         self.UDPSINK = False
         self.FILESINK = False
         self.HLSSINK = False
+        self.outfile = ''
 
         if src is None or src == "udp":
             self.UDPSRC = True
@@ -372,14 +395,13 @@ class VideoStream:
         elif sink == "opencv":
             self.APPSINK = True
         elif sink == "file":
-            self.outfile = outfile
             self.FILESINK = True
 
         self.duration = duration
-        self.port = 5000
+        self.port = 5004
         self.Gstobj = GstBackEnd()
         self.cycles = 0
-        self.output_res = [1920, 1080]
+        self.output_res = [3280, 2464]
         self.hostip = None
         self.hls_playlist_length = None
         self.hls_max_files = None
@@ -419,12 +441,13 @@ class VideoStream:
         self.hostip = host
         self.port = port
 
-    def configure_hls(self, len, maxfiles, dur, root, playloc, loc):
-        self.hls_playlist_length = len
+    def configure_hls(self, length, maxfiles, dur, root, playloc, loc):
+        self.hls_playlist_length = length
         self.hls_max_files = maxfiles
         self.hls_target_duration = dur
         self.hls_playlist_root = root
         self.hls_playlist_loc = playloc
+        self.hls_loc = loc
 
     def start_stream(self):
 
@@ -439,10 +462,9 @@ class VideoStream:
         print("Completed cleanup")
 
         if self.APPSINK:
-            return self.img_array, True
+            return self.img_array
         else:
-            arr = []
-            return arr, True
+            return [self.outfile]
 
     def create_elements(self):
 
@@ -465,13 +487,14 @@ class VideoStream:
                             videosrc.set_property(label, val)
 
             # Create caps for videosrc
-            vidcaps = Gst.ElementFactory.make('capsfilter', 'udpcaps')
+            vidcaps = Gst.ElementFactory.make('capsfilter', 'vidcaps')
             res = self.csicam.get_resolution()
             format = self.csicam.get_capture_format()
             rate = self.csicam.get_framerate()
-            vidcaps.set_property('caps', Gst.caps_from_string('video/x-raw(memory:NVMM), width=(int)' + str(res[0])
-                                 + ',' + ' height=(int)' + str(res[1]) + ',' + ' format=(string)' + format
-                                 + ',' + ' framerate=(fraction)' + str(rate) + '/1'))
+            caps_str = 'video/x-raw(memory:NVMM), width=(int)' + str(res[0]) + ',' + ' height=(int)' + str(res[1]) + \
+                       ',' + ' format=(string)' + format + ',' + ' framerate=(fraction)' + str(rate) + '/1'
+            print(caps_str)
+            vidcaps.set_property('caps', Gst.caps_from_string(caps_str))
 
             # Create nvvidconv element
             nvidconv = Gst.ElementFactory.make('nvvidconv', 'convert')
@@ -479,8 +502,9 @@ class VideoStream:
 
             # Create output caps
             outcaps = Gst.ElementFactory.make('capsfilter', 'outcaps')
-            outcaps.set_property('caps', Gst.caps_from_string('video/x-raw, width=(int)' + str(self.output_res[0]) + ','
-                                 + ' height=(int)' + str(self.output_res[1])))
+            caps_str = 'video/x-raw, width=(int)' + str(self.output_res[0]) + ',' + ' height=(int)' + str(self.output_res[1])
+            print(caps_str)
+            outcaps.set_property('caps', Gst.caps_from_string(caps_str))
 
             # Add elements to list
             gst_elements.append(videosrc)
@@ -491,21 +515,23 @@ class VideoStream:
         # Setup UDP source element if enabled
         elif self.UDPSRC:
             # Create udpsrc element
-            udpsrc = Gst.ElementFactory.make('udpsrc', 'src')
+            udpsrc = Gst.ElementFactory.make('udpsrc', 'udpsrc')
 
             # Set properties for udpsrc
             udpsrc.set_property('port', self.port)
+            #udpsrc.set_property('timeout', 5000000000)
+            udpsrc.set_property('caps', Gst.caps_from_string('application/x-rtp, encoding-name=H264, payload=96'))
 
             # Create caps for udpsrc
-            udpcaps = Gst.ElementFactory.make('capsfilter', 'udpcaps')
-            udpcaps.set_property('caps', Gst.caps_from_string('application/x-rtp, encoding-name=H264, payload=96'))
+            #udpcaps = Gst.ElementFactory.make('capsfilter', 'udpcaps')
+            #udpcaps.set_property('caps', Gst.caps_from_string('application/x-rtp, encoding-name=H264, payload=96'))
 
             # Create remaining elements required for udpsrc
             rtpdepay = Gst.ElementFactory.make('rtph264depay', 'depay')
             parse = Gst.ElementFactory.make('h264parse', 'parse')
 
             gst_elements.append(udpsrc)
-            gst_elements.append(udpcaps)
+            #gst_elements.append(udpcaps)
             gst_elements.append(rtpdepay)
             gst_elements.append(parse)
 
@@ -538,6 +564,7 @@ class VideoStream:
                 encoder_caps = Gst.ElementFactory.make('capsfilter', 'enc_caps')
                 encoder_caps.set_property('caps', Gst.caps_from_string('video/x-h264, stream-format=byte-stream'))
                 rtppay = Gst.ElementFactory.make('rtph264pay', 'rtp_pay')
+                #rtppay.set_property('caps', Gst.caps_from_string('video/x-h264, stream-format=byte-stream'))
                 gst_elements.append(encoder)
                 gst_elements.append(encoder_caps)
                 gst_elements.append(rtppay)
@@ -545,21 +572,17 @@ class VideoStream:
         # Configure mux
         if self.FILESINK:
             mux = Gst.ElementFactory.make('qtmux', 'mux')
+            gst_elements.append(mux)
 
         elif self.HLSSINK:
             mux = Gst.ElementFactory.make('mpegtsmux', 'mux')
-
-        gst_elements.append(mux)
+            gst_elements.append(mux)
 
         # Configure sink
         if self.FILESINK:
             sink = Gst.ElementFactory.make('filesink', 'sink')
-            if self.cycles > 0:
-                fname_split = self.outfile.split('.')
-                sink_str = fname_split[0] + str(self.cycles) + '.' + fname_split[1]
-                sink.set_property('location', sink_str)
-            else:
-                sink.set_property('location', self.outfile)
+            self.outfile = self.media_path + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.mp4'
+            sink.set_property('location', self.outfile)
 
         elif self.APPSINK:
             sink = Gst.ElementFactory.make('appsink', 'sink')
@@ -587,6 +610,7 @@ class VideoStream:
         # Add elements to pipeline
         for elem in gst_elements:
             self.Gstobj.pipeline.add(elem)
+            print(elem)
 
         # Link elements
         last = len(gst_elements) - 2
@@ -618,17 +642,20 @@ class VideoStream:
 
 
 class ImageStream:
-    def __init__(self, frames, interval, sink=None, outfile=None):
+    def __init__(self, frames, interval, sink=None):
         self.APPSINK = False
         self.FILESINK = False
+        self.media_path = "/home/justin/media/"
+        self.fnames_array = []
+        self.outfile = ''
 
         if sink is None or sink == "opencv":
             self.APPSINK = True
         elif sink == "file":
-            self.outfile = outfile
             self.FILESINK = True
 
         self.csicam = None
+        self.calc_framerate = round(frames/interval)
         self.tmppath = "/home/justin/media/tmp/"
         self.tmpname = "tmp%05d.jpg"
         self.frames = frames
@@ -637,21 +664,24 @@ class ImageStream:
         self.Gstobj = GstBackEnd()
         self.cycles = 0
         self.img_array = []
-        self.fnames_array = []
         self.new_start = 0
-        #self.old_fnames_array = []
         self.tnow = time.time()
         self.tinit = time.time()
         self.output_res = [1920, 1080]
         self.Gstobj.init()
-        #self.create_elements()
 
     def connect_camera(self, cam):
         self.csicam = cam
-        self.csicam.set_resolution(3280, 2464)
-        self.csicam.set_capture_format("NV12")
-        self.csicam.set_framerate(20)
-        self.csicam.set_flip_method(2)
+
+        # If required settings have not already be made on camera, set them here
+        if self.csicam.get_resolution() is None:
+            self.csicam.set_resolution(3280, 2464)
+        if self.csicam.get_capture_format() is None:
+            self.csicam.set_capture_format("NV12")
+        if self.csicam.get_framerate() is None:
+            self.csicam.set_framerate(20)
+        if self.csicam.get_flip_method() is None:
+            self.csicam.set_flip_method(2)
 
 
     def set_output_resolution(self, width, height):
@@ -671,7 +701,8 @@ class ImageStream:
 
     def start_stream(self):
         self.img_array = []
-        self.fnames_array = []
+        if self.cycles != 0:
+            self.fnames_array = []
 
         while True:
             self.tnow = time.time()
@@ -699,8 +730,6 @@ class ImageStream:
         os.rename(fname, self.fnames_array[-1])
         os.system('rm -rf %s*' % self.tmppath)
 
-
-
         #cap = cv2.VideoCapture(self.tmppath)
         #idx = 0
         #while cap.isOpened():
@@ -710,7 +739,6 @@ class ImageStream:
         #        break
         #    idx += 1
         #cap.release()
-
 
     def create_elements(self):
 
@@ -765,20 +793,12 @@ class ImageStream:
         # Create sink
         if self.FILESINK:
             sink = Gst.ElementFactory.make('multifilesink', 'sink')
-            if self.cycles > 0:
-                fname_split = self.outfile.split('.')
-                sink_str = fname_split[0] + '_run_' + str(self.new_start) + '_frame_' + str(self.cycles) + '.' + fname_split[1]
-                self.fnames_array.append(sink_str)
+            self.outfile = self.media_path + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.jpg'
+            self.fnames_array.append(self.outfile)
 
-            else:
-                fname_split = self.outfile.split('.')
-                sink_str = fname_split[0] + '_run_' + str(self.new_start) + '_frame_0.jpg'
-                self.fnames_array.append(sink_str)
 
             sink.set_property('location', self.tmppath + self.tmpname)
-            #tmp_split = self.tmpname.split('.')
-            #self.old_fnames_array.append(self.tmppath + tmp_split[0] + str(self.delay_frames - 1) + '.jpg')
-
+            
         elif self.APPSINK:
             sink = Gst.ElementFactory.make('appsink', 'sink')
             sink.set_property('emit-signals', True)

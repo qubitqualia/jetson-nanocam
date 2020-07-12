@@ -19,9 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Verified VideoStream and ImageStream classes are working for save-to-file">
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Removed OpenCV because it is broken on Jetson Nano">
+      <change afterPath="$PROJECT_DIR$/Jetson/mediaclient.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media_client.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/media_server.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/udp_media_transfer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Jetson/nanocam.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/nanocam.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Jetson/networking.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/networking.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,13 +47,16 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1eKiVfxh2O3ORhAASSVa00RJHqr" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Birdfeeder" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../sht3x-dis Humidity and Temperature Sensor" />
     <property name="settings.editor.selected.configurable" value="Errors" />
   </component>
   <component name="RecentsManager">
@@ -56,7 +64,7 @@
       <recent name="C:\Users\jmatt\PycharmProjects\NanoCam\Jetson" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.udp_media_transfer">
     <configuration default="true" type="tests" factoryName="Attests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -97,8 +105,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="udp_media_transfer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="gstreamer" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/udp_media_transfer.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.udp_media_transfer" />
         <item itemvalue="Python.media_test_client" />
       </list>
     </recent_temporary>
@@ -142,7 +172,14 @@
       <option name="project" value="LOCAL" />
       <updated>1594408473548</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Removed OpenCV because it is broken on Jetson Nano">
+      <created>1594470625855</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1594470625855</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -170,9 +207,14 @@
     <MESSAGE value="In process of re-writing to enable streaming to multiple different endpoints" />
     <MESSAGE value="Completely rewrote package" />
     <MESSAGE value="Verified VideoStream and ImageStream classes are working for save-to-file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Verified VideoStream and ImageStream classes are working for save-to-file" />
+    <MESSAGE value="Removed OpenCV because it is broken on Jetson Nano" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed OpenCV because it is broken on Jetson Nano" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="412" y="74" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1594475203434">
+      <screen x="69" y="0" width="1607" height="943" />
+    </state>
+    <state x="412" y="74" key="#com.intellij.execution.impl.EditConfigurationsDialog/69.0.1607.943@69.0.1607.943" timestamp="1594475203434" />
     <state x="1038" y="284" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1594170668080">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
@@ -181,33 +223,33 @@
       <screen x="69" y="0" width="1607" height="943" />
     </state>
     <state x="602" y="218" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/69.0.1607.943@69.0.1607.943" timestamp="1594388541274" />
-    <state x="698" y="188" key="FileChooserDialogImpl" timestamp="1594156419782">
+    <state x="698" y="188" key="FileChooserDialogImpl" timestamp="1594484881502">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state x="698" y="188" key="FileChooserDialogImpl/69.0.1607.943@69.0.1607.943" timestamp="1594156419782" />
-    <state width="1296" height="233" key="GridCell.Tab.0.bottom" timestamp="1594169848295">
+    <state x="698" y="188" key="FileChooserDialogImpl/69.0.1607.943@69.0.1607.943" timestamp="1594484881502" />
+    <state width="1095" height="185" key="GridCell.Tab.0.bottom" timestamp="1594486594493">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1296" height="233" key="GridCell.Tab.0.bottom/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
-    <state width="1296" height="233" key="GridCell.Tab.0.center" timestamp="1594169848295">
+    <state width="1095" height="185" key="GridCell.Tab.0.bottom/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
+    <state width="1095" height="185" key="GridCell.Tab.0.center" timestamp="1594486594493">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1296" height="233" key="GridCell.Tab.0.center/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
-    <state width="1296" height="233" key="GridCell.Tab.0.left" timestamp="1594169848295">
+    <state width="1095" height="185" key="GridCell.Tab.0.center/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
+    <state width="1095" height="185" key="GridCell.Tab.0.left" timestamp="1594486594493">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1296" height="233" key="GridCell.Tab.0.left/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
-    <state width="1296" height="233" key="GridCell.Tab.0.right" timestamp="1594169848295">
+    <state width="1095" height="185" key="GridCell.Tab.0.left/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
+    <state width="1095" height="185" key="GridCell.Tab.0.right" timestamp="1594486594493">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1296" height="233" key="GridCell.Tab.0.right/69.0.1607.943@69.0.1607.943" timestamp="1594169848295" />
+    <state width="1095" height="185" key="GridCell.Tab.0.right/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
     <state x="310" y="77" key="SettingsEditor" timestamp="1594076874331">
       <screen x="69" y="0" width="1467" height="864" />
     </state>
     <state x="310" y="77" key="SettingsEditor/69.0.1467.864@69.0.1467.864" timestamp="1594076874331" />
-    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup" timestamp="1594429240682">
+    <state x="792" y="222" width="672" height="678" key="search.everywhere.popup" timestamp="1594499375119">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state x="792" y="221" width="672" height="678" key="search.everywhere.popup/69.0.1607.943@69.0.1607.943" timestamp="1594429240682" />
+    <state x="792" y="222" width="672" height="678" key="search.everywhere.popup/69.0.1607.943@69.0.1607.943" timestamp="1594499375119" />
   </component>
 </project>
