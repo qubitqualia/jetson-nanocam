@@ -19,13 +19,11 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Tested all streaming methods except for OpenCV">
-      <change afterPath="$PROJECT_DIR$/Jetson/globals.py" afterDir="false" />
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Replaced timeout on nvarguscamerasrc with separate timer thread because Gst would not release the camera before its timer expired">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Jetson/globals.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/globals.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Jetson/nanocam.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/nanocam.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Jetson/networking.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/networking.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/media_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/media_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/media_server.py" beforeDir="false" afterPath="$PROJECT_DIR$/media_server.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -185,7 +183,14 @@
       <option name="project" value="LOCAL" />
       <updated>1594557027673</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Replaced timeout on nvarguscamerasrc with separate timer thread because Gst would not release the camera before its timer expired">
+      <created>1594574991832</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1594574991832</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -215,7 +220,8 @@
     <MESSAGE value="Verified VideoStream and ImageStream classes are working for save-to-file" />
     <MESSAGE value="Removed OpenCV because it is broken on Jetson Nano" />
     <MESSAGE value="Tested all streaming methods except for OpenCV" />
-    <option name="LAST_COMMIT_MESSAGE" value="Tested all streaming methods except for OpenCV" />
+    <MESSAGE value="Replaced timeout on nvarguscamerasrc with separate timer thread because Gst would not release the camera before its timer expired" />
+    <option name="LAST_COMMIT_MESSAGE" value="Replaced timeout on nvarguscamerasrc with separate timer thread because Gst would not release the camera before its timer expired" />
   </component>
   <component name="WindowStateProjectService">
     <state x="412" y="74" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1594475203434">

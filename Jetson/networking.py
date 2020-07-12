@@ -1,18 +1,15 @@
 import pickle, _pickle
 import json
 import socket
-import sys
-import uuid
-from threading import Thread, Timer
+from threading import Thread
 from Jetson.nanocam import *
 import cv2
 
 
-
 class MediaServer:
     def __init__(self, port):
-        self.port = port
-        self.media_port = 5004
+        self.port = port        # Port for messaging
+        self.media_port = 5004  # Port for streaming media via UDP
         self.media_path = '/home/justin/media/'
         self.sock = socket.socket()
         self.sock.bind(('0.0.0.0', self.port))
@@ -34,14 +31,15 @@ class MediaServer:
 
             # Establish socket connection with client [BLOCKING]
             if not self.CLIENT_CONNECTED:
-                print("Waiting for remote client connection...")
+                print("Waiting for remote client connection...",)
                 self.conn, self.addr = self.sock.accept()
                 print("Client connected!")
                 self.CLIENT_CONNECTED = True
 
             # Receive requests from client [BLOCKING]
-            print("Listening for client requests...")
+            print("Listening for client requests...",)
             msg = self.conn.recv(1024).decode()
+            print("received new message!")
 
             # Valid requests:
             # {type: "image", width: wwww, height: hhhh, frames: xx, interval: yy, format: "opencv"/"file"}
@@ -50,6 +48,7 @@ class MediaServer:
             _flag_VALIDMSG = False
             _json = {}
 
+            # Check for valid JSON from client
             try:
                 _json = json.loads(msg)
                 _flag_VALIDMSG = True
@@ -66,12 +65,12 @@ class MediaServer:
 
                 # Check for active local streams that require shutdown prior to fulfilling client request
                 if StreamStatus.LOCAL_BUSY and _json["type"] != "kill":
-                    print("Sending BUSY response to client")
+                    print("Stream already being processed on server. Sending BUSY response to client")
                     self.last_json = _json
                     self.conn.send(b"BUSY")
                 elif StreamStatus.LOCAL_BUSY and _json["type"] == "kill":
                     if self.last_json["format"] == "udp":
-                        print("Kill request received from client. Shutting down pipeline!")
+                        print("Kill request received from client. Shutting down the pipeline!")
                         self.conn.send(b"OK")
                         _json = self.last_json
                     StreamStatus.LOCAL_KILL = True
@@ -80,29 +79,7 @@ class MediaServer:
                     if not StreamStatus.LOCAL_BUSY and _json["format"] == "udp":
                         self.conn.send(b"OK")
 
-                # Check thread status before processing request
-                # If thread is active but kill request not received, then tell client that server is busy
-                # OK/BUSY response is *required* for UDP requests
-                # if self.THREAD_ACTIVE and _json["type"] != "kill":
-                #     if self.thread.is_alive():
-                #         self.conn.send(b"BUSY")
-                #     else:
-                #         if _json["format"] == "udp":
-                #             self.conn.send(b"OK")
-                #         self.THREAD_ACTIVE = False
-                # elif not self.THREAD_ACTIVE and _json["format"] == "udp":
-                #     self.conn.send(b"OK")
-                #
-                # # If thread is active and kill request is received, stop pipeline to kill thread
-                # elif self.THREAD_ACTIVE and _json["type"] == "kill":
-                #     if self.thread.is_alive():
-                #         StreamBus.KILL_THREAD = True
-                #         # Need to tell client "OK" to proceed with request
-                #         self.conn.send(b"OK")
-                #     else:
-                #         self.THREAD_ACTIVE = False
-
-                #if not self.THREAD_ACTIVE and not StreamStatus.LOCAL_BUSY:
+                # If kill command received from client, wait for pipeline to close before proceeding with request
                 print("Waiting for pipeline to close...",)
                 if self.WAIT_FOR_CLOSE:
                     self.WAIT_FOR_CLOSE = False
@@ -110,6 +87,7 @@ class MediaServer:
                         pass
                     print("done!")
 
+                # Process request from client
                 if not StreamStatus.LOCAL_BUSY:
                     _type = _json["type"]
                     _width = int(_json["width"])
@@ -144,14 +122,19 @@ class MediaServer:
 
     def get_images(self, w, h, frames, interval, format_):
 
+        # Returns array of images to the client
         if format_ == "opencv":
+            print("Processing image request [OpenCV sink]...")
             imager = ImageStream(frames, interval, sink="opencv")
             imager.connect_camera(self.csicam)
             imager.set_frames(frames)
             imager.set_interval(interval)
             img_arr = imager.start_stream()
             return img_arr
+
+        # Returns array of filenames to the client
         elif format_ == "file":
+            print("Processing image request [File sink]...")
             imager = ImageStream(frames, interval, sink="file")
             imager.connect_camera(self.csicam)
             imager.set_frames(frames)
@@ -161,36 +144,33 @@ class MediaServer:
 
     def get_video(self, w, h, dur, format_):
 
+        # Returns array of images to the client
         if format_ == "opencv":
+            print("Processing video request [OpenCV sink]...")
             vid = VideoStream(dur, src="camera", sink="opencv")
             vid.connect_camera(self.csicam)
             vid.set_output_resolution(w, h)
-            #vid.set_timeout(dur)
             img_arr = vid.start_stream()
-            del vid
             return img_arr
 
+        # Returns filename of video to client in array of length 1
         elif format_ == "file":
+            print("Processing video request [File sink]...")
             vid = VideoStream(dur, src="camera", sink="file")
             vid.connect_camera(self.csicam)
             vid.set_output_resolution(w, h)
-            #vid.set_timeout(dur)
             f_arr = vid.start_stream()
-            del vid
             return f_arr
 
         elif format_ == "udp":
+            print("Processing video request [UDP sink]...")
             self.vid = VideoStream(dur, src="camera", sink="udp")
             self.vid.connect_camera(self.csicam)
             self.vid.set_output_resolution(w, h)
             self.vid.configure_udp_conn(self.addr[0], self.media_port)
-            print("IP Address of host: {}".format(self.addr[0]))
-            print("Port: {}".format(self.media_port))
             self.thread = Thread(target=self.vid.start_stream, args=())
             self.thread.start()
-            print("UDP pipeline opened. Streaming to client for {} seconds.".format(dur))
-            #self.timer = Timer(dur+1, self.close_pipeline)
-            #self.timer.start()
+            print("UDP pipeline opened. Streaming to client {}:{} for {} seconds.".format(dur, self.addr[0], self.media_port))
             self.THREAD_ACTIVE = True
             return []
 
@@ -200,7 +180,6 @@ class MediaServer:
         _json_str = json.dumps(_json)
         self.conn.send(_json_str.encode())
         self.timer.cancel()
-        #self.thread.join()
         self.timer = None
         self.start()
 
@@ -228,18 +207,20 @@ class MediaServer:
 
     def send_array(self, arr):
         print("Sending array to client...")
-        tot_bytes = 0
+        tot_bytes = sys.getsizeof(arr)
 
         data = pickle.dumps(arr, protocol=2)
         self.conn.sendall(data)
         self.conn.send(b"DONE")
 
+        print("Transfer complete! {} kB sent to client".format(tot_bytes/1000))
+
 
 class MediaClient:
     def __init__(self, host, port):
         self.hostip = host
-        self.port = port
-        self.media_port = 5004
+        self.port = port            # Messaging port
+        self.media_port = 5004      # Media port
         self.media_path = 'C:\\Users\\jmatt\\RemoteMedia\\'
         self.sock = socket.socket()
         self.thread = None
@@ -251,6 +232,8 @@ class MediaClient:
         self.sock.connect((self.hostip, self.port))
 
     def listen_for_close(self):
+        # Deprecated
+
         print("Waiting for kill request from server to close UDP pipeline...")
         data = self.sock.recv(1024).decode()
         _json = json.loads(data)
@@ -259,13 +242,20 @@ class MediaClient:
             self.vid.Gstobj.quit()
 
     def start_threads(self):
-        #self.thread2 = Thread(target=self.listen_for_close, args=())
-        #self.thread2.start()
         time.sleep(0.1)
         self.thread = Thread(target=self.vid.start_stream, args=())
         self.thread.start()
 
     def image_request(self, frames, interval, width=3280, height=2464, display=False, override=False):
+        # Fetch a series of images from the server camera
+        # frames - number of frames to capture
+        # interval - time interval between frames
+        # width - output width of retrieved frames
+        # height - output height of retrieved frames
+        # display - display images immediately upon receipt
+        # override - issue command to server to immediately close any existing pipelines to process this one
+        # Returns tuple of arrays - filenames, images
+
         fname = []
         img_array = []
 
@@ -299,6 +289,15 @@ class MediaClient:
         return fname, img_array
 
     def video_request(self, duration, width=3280, height=2464, display=False, override=False, src="file"):
+        # Fetch a video from the server camera
+        # duration - length of time to stream in seconds
+        # width - output width of retrieved video
+        # height - output height of retrieved video
+        # display - display video immediately upon receipt
+        # override - issue command to server to immediately close any existing pipelines to process this one
+        # src - select source for video stream on the client side (e.g. "file", "udp")
+        # Returns tuple of arrays - filenames, images
+
         fname = []
         img_array = []
 
@@ -341,7 +340,6 @@ class MediaClient:
         # Stream via UDP to file on client using VideoStream class
         elif src == "udp":
             self.vid = VideoStream(duration, src="udp", sink="file")
-            #self.vid.set_timeout(duration)
             self.vid.set_output_resolution(width, height)
             self.vid.configure_udp_conn(port=self.media_port)
 
@@ -379,6 +377,17 @@ class MediaClient:
 
     def hls_request(self, duration, hls_root, hls_playloc, hls_loc, width=3280, height=2464, override=False,
                     hls_len=10, hls_maxfiles=10, hls_duration=5):
+        # Activate an HLS stream on the server
+        # duration - length of time to stream in seconds
+        # hls_root - root location for HLS (e.g. http://localhost/)
+        # hls_playloc - location of m3u8 file (e.g. /var/www/public/stream0.m3u8)
+        # hls_loc - location of fragment files (e.g. /var/www/public/fragment%05d.ts)
+        # width - output width of HLS stream
+        # height - output height of HLS stream
+        # override - issue command to server to close any existing pipelines to process this one
+        # hls_len - length of HLS playlist
+        # hls_maxfiles - maximum number of HLS files
+        # hls_duration - target duration for HLS fragments in seconds
 
         # Request UDP pipeline from server
         message = {"type": "video", "width": width, "height": height, "duration": duration, "format": "udp"}
@@ -387,7 +396,6 @@ class MediaClient:
 
         # Instantiate VideoStream object
         self.vid = VideoStream(duration, src="udp", sink="hls")
-        #self.vid.set_timeout(duration)
         self.vid.set_output_resolution(width, height)
         self.vid.configure_udp_conn(port=self.media_port)
         self.vid.configure_hls(hls_len, hls_maxfiles, hls_duration, hls_root, hls_playloc, hls_loc)
@@ -414,6 +422,7 @@ class MediaClient:
                 return False
 
     def send_kill(self):
+        # This function is called automatically whenever override flag is set to True
         print("Server is busy. Sending override command...")
         message = {"type": "kill"}
         _json_str = json.dumps(message)

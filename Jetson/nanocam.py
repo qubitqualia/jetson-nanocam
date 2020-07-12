@@ -3,18 +3,12 @@ import numpy
 import time
 import os
 import sys
-import uuid
 from datetime import datetime
-from Jetson.globals import StreamStatus
+from Jetson.globals import StreamStatus, Camera
 from threading import Thread, Timer
 
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
-
-
-
-class StreamBus:
-    KILL_THREAD = False
 
 
 class GstBackEnd:
@@ -23,8 +17,6 @@ class GstBackEnd:
         self.pipeline = None
         self.bus = None
         self.cycles = 0
-        self.tnow = time.time()
-        self.tinit = time.time()
         self.killthread = Thread(target=self.check_kill_flag, args=())
         self.timer = None
 
@@ -34,7 +26,6 @@ class GstBackEnd:
 
         GObject.threads_init()
         self.loop = GObject.MainLoop()
-        # GObject.timeout_add(100, self.check_kill_flag)
         self.killthread.start()
 
         if self.timer is not None:
@@ -57,10 +48,6 @@ class GstBackEnd:
 
     def check_kill_flag(self):
         while True:
-            self.tnow = time.time()
-            if self.tnow - self.tinit >= 0.1:
-                self.tinit = time.time()
-                #print("LOCAL_KILL is {}, LOCAL_BUSY is {}".format(StreamStatus.LOCAL_KILL, StreamStatus.LOCAL_BUSY))
             if StreamStatus.LOCAL_KILL:
                 StreamStatus.LOCAL_KILL = False
                 self.quit()
@@ -85,13 +72,6 @@ class GstBackEnd:
         self.cycles += 1
 
     def bus_call(self, bus, msg, *args):
-
-        if StreamBus.KILL_THREAD:
-            print("INSIDE BUS")
-            self.pipeline.send_event(Gst.Event.new_eos())
-            self.loop.quit()
-
-            return
 
         if msg.type == Gst.MessageType.EOS:
 
@@ -126,39 +106,6 @@ class GstBackEnd:
         return True
 
 
-class Camera:
-    NVCAM_WB_MODE_OFF = 0
-    NVCAM_WB_MODE_AUTO = 1
-    NVCAM_WB_MODE_INCANDESCENT = 2
-    NVCAM_WB_MODE_FLUORESCENT = 3
-    NVCAM_WB_MODE_WARM_FLUORESCENT = 4
-    NVCAM_WB_MODE_DAYLIGHT = 5
-    NVCAM_WB_MODE_CLOUDY_DAYLIGHT = 6
-    NVCAM_WB_MODE_TWILIGHT = 7
-    NVCAM_WB_MODE_SHADE = 8
-    NVCAM_WB_MODE_MANUAL = 9
-
-    NVCAM_NR_OFF = 0
-    NVCAM_NR_FAST = 1
-    NVCAM_NR_HIGHQUALITY = 2
-
-    NVCAM_EE_OFF = 0
-    NVCAM_EE_FAST = 1
-    NVCAM_EE_HIGHQUALITY = 2
-
-    NVCAM_AEANTIBANDING_OFF = 0
-    NVCAM_AEANTIBANDING_AUTO = 1
-    NVCAM_AEANTIBANDING_50HZ = 2
-    NVCAM_AEANTIBANDING_60HZ = 3
-
-    ENCODER_OMXH264 = 0
-    ENCODER_OMXH265 = 1
-    ENCODER_OMXVP8 = 2
-    ENCODER_OMXVP9 = 3
-    ENCODER_NVV4L2H264 = 4
-    ENCODER_NVV4L2H265 = 5
-    ENCODER_NVV4L2VP8 = 6
-    ENCODER_NVV4L2VP9 = 7
 
 
 class CSIcamera:
@@ -191,7 +138,6 @@ class CSIcamera:
         self.cam_props.append({"custom": "framerate", "val": None})
         self.cam_props.append({"custom": "flip-method", "val": None})
         self.cam_props.append({"custom": "captureformat", "val": None})
-
 
     def get_index(self, key):
         for i, _dict in enumerate(self.cam_props):
@@ -402,6 +348,16 @@ class CSIcamera:
 
 
 class VideoStream:
+    # Class for streaming video from nvarguscamerasrc to Jetson Nano (tested on R32.4.2)
+    # The following source:sink combinations are currently available -
+    # "camera":"file"
+    # "camera":"udp"
+    # "camera":"hls"
+    # "camera":"opencv" [not tested]
+    # "udp":"file"
+    # "udp":"hls"
+    # "udp":"opencv"  [not tested]
+
     def __init__(self, duration, src=None, sink=None):
         self.media_path = "/home/justin/media/"
         self.CAMERASRC = False
@@ -452,15 +408,17 @@ class VideoStream:
             print("Cannot connect camera because object is not configured to use a camera source...ignoring")
         else:
             self.csicam = cam
-            self.csicam.set_resolution(3280, 2464)
-            self.csicam.set_capture_format("NV12")
-            self.csicam.set_framerate(20)
-            self.csicam.set_flip_method(2)
-            #self.csicam.set_timeout(self.duration)
+            if self.csicam.get_resolution() is None:
+                self.csicam.set_resolution(3280, 2464)
+            if self.csicam.get_capture_format() is None:
+                self.csicam.set_capture_format("NV12")
+            if self.csicam.get_framerate() is None:
+                self.csicam.set_framerate(20)
+            if self.csicam.get_flip_method() is None:
+                self.csicam.set_flip_method(2)
 
     def set_timeout(self, duration):
         if self.CAMERASRC and self.csicam is not None:
-            print("Camera settings updated!")
             self.duration = duration
         elif self.CAMERASRC and self.csicam is None:
             print("Cannot complete request because a CSIcamera object has not been connected...ignoring")
@@ -555,19 +513,13 @@ class VideoStream:
 
             # Set properties for udpsrc
             udpsrc.set_property('port', self.port)
-            #udpsrc.set_property('timeout', 5000000000)
             udpsrc.set_property('caps', Gst.caps_from_string('application/x-rtp, encoding-name=H264, payload=96'))
-
-            # Create caps for udpsrc
-            #udpcaps = Gst.ElementFactory.make('capsfilter', 'udpcaps')
-            #udpcaps.set_property('caps', Gst.caps_from_string('application/x-rtp, encoding-name=H264, payload=96'))
 
             # Create remaining elements required for udpsrc
             rtpdepay = Gst.ElementFactory.make('rtph264depay', 'depay')
             parse = Gst.ElementFactory.make('h264parse', 'parse')
 
             gst_elements.append(udpsrc)
-            #gst_elements.append(udpcaps)
             gst_elements.append(rtpdepay)
             gst_elements.append(parse)
 
@@ -600,7 +552,7 @@ class VideoStream:
                 encoder_caps = Gst.ElementFactory.make('capsfilter', 'enc_caps')
                 encoder_caps.set_property('caps', Gst.caps_from_string('video/x-h264, stream-format=byte-stream'))
                 rtppay = Gst.ElementFactory.make('rtph264pay', 'rtp_pay')
-                #rtppay.set_property('caps', Gst.caps_from_string('video/x-h264, stream-format=byte-stream'))
+
                 gst_elements.append(encoder)
                 gst_elements.append(encoder_caps)
                 gst_elements.append(rtppay)
@@ -646,7 +598,6 @@ class VideoStream:
         # Add elements to pipeline
         for elem in gst_elements:
             self.Gstobj.pipeline.add(elem)
-            #print(elem)
 
         # Link elements
         last = len(gst_elements) - 2
@@ -678,6 +629,14 @@ class VideoStream:
 
 
 class ImageStream:
+    # Class for streaming images from nvarguscamerasrc to Jetson Nano (tested on R32.4.2)
+    # The following source:sink combinations are currently available -
+    # "camera":"file"
+    # "camera":"opencv"  [not tested]
+    # Note that the class is configured to collect a number of frames determined by self.delay_frames each time
+    # a single image is collected.  The saved image is the last frame.  This allows the camera time to adjust to
+    # lighting conditions and produces much better images.
+
     def __init__(self, frames, interval, sink=None):
         self.APPSINK = False
         self.FILESINK = False
@@ -694,9 +653,9 @@ class ImageStream:
         self.calc_framerate = round(frames/interval)
         self.tmppath = "/home/justin/media/tmp/"
         self.tmpname = "tmp%05d.jpg"
-        self.frames = frames
-        self.interval = interval
-        self.delay_frames = 20
+        self.frames = frames        # Total number of frames to collect
+        self.interval = interval    # Interval between frames in seconds
+        self.delay_frames = 20      # The first (self.delay_frames-1) frames are thrown away, the last one is saved
         self.Gstobj = GstBackEnd()
         self.cycles = 0
         self.img_array = []
@@ -718,7 +677,6 @@ class ImageStream:
             self.csicam.set_framerate(20)
         if self.csicam.get_flip_method() is None:
             self.csicam.set_flip_method(2)
-
 
     def set_output_resolution(self, width, height):
         self.output_res = [width, height]
@@ -774,16 +732,6 @@ class ImageStream:
         os.rename(fname, self.fnames_array[-1])
         os.system('rm -rf %s*' % self.tmppath)
 
-        #cap = cv2.VideoCapture(self.tmppath)
-        #idx = 0
-        #while cap.isOpened():
-        #    ret, frame = cap.read()
-        #    if idx == self.delay_time - 2:
-        #        cv2.imwrite(self.fnames_array[-1], frame)
-        #        break
-        #    idx += 1
-        #cap.release()
-
     def create_elements(self):
 
         gst_elements = []
@@ -828,19 +776,15 @@ class ImageStream:
         gst_elements.append(nvidconv)
         gst_elements.append(outcaps)
 
-
         # Create encoder element
         encoder = Gst.ElementFactory.make('nvjpegenc', 'encoder')
         gst_elements.append(encoder)
-
 
         # Create sink
         if self.FILESINK:
             sink = Gst.ElementFactory.make('multifilesink', 'sink')
             self.outfile = self.media_path + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + '.jpg'
             self.fnames_array.append(self.outfile)
-
-
             sink.set_property('location', self.tmppath + self.tmpname)
             
         elif self.APPSINK:
@@ -860,7 +804,6 @@ class ImageStream:
         last = len(gst_elements) - 2
         for i, elem in enumerate(gst_elements):
             if i <= last:
-                #print("Linking {} to {}".format(elem, gst_elements[i+1]))
                 elem.link(gst_elements[i + 1])
             else:
                 break
