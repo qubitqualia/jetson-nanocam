@@ -5,6 +5,8 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from Jetson.globals import StreamStatus
+from threading import Thread, Timer
 
 gi.require_version('Gst', '1.0')
 from gi.repository import GObject, Gst
@@ -21,6 +23,10 @@ class GstBackEnd:
         self.pipeline = None
         self.bus = None
         self.cycles = 0
+        self.tnow = time.time()
+        self.tinit = time.time()
+        self.killthread = Thread(target=self.check_kill_flag, args=())
+        self.timer = None
 
     def init(self):
         if self.cycles == 0:
@@ -28,12 +34,37 @@ class GstBackEnd:
 
         GObject.threads_init()
         self.loop = GObject.MainLoop()
+        # GObject.timeout_add(100, self.check_kill_flag)
+        self.killthread.start()
+
+        if self.timer is not None:
+            self.timer.start()
+
         self.pipeline = Gst.Pipeline()
         self.bus = self.pipeline.get_bus()
         self.bus.add_watch(0, self.bus_call, self.loop)
 
+    def set_timer(self, duration):
+        self.timer = Timer(duration, self.set_kill_flag)
+
     def quit(self):
         self.pipeline.send_event(Gst.Event.new_eos())
+
+    def set_kill_flag(self):
+        StreamStatus.LOCAL_KILL = True
+        self.timer.cancel()
+        self.timer = None
+
+    def check_kill_flag(self):
+        while True:
+            self.tnow = time.time()
+            if self.tnow - self.tinit >= 0.1:
+                self.tinit = time.time()
+                #print("LOCAL_KILL is {}, LOCAL_BUSY is {}".format(StreamStatus.LOCAL_KILL, StreamStatus.LOCAL_BUSY))
+            if StreamStatus.LOCAL_KILL:
+                StreamStatus.LOCAL_KILL = False
+                self.quit()
+                break
 
     def start(self):
         self.pipeline.set_state(Gst.State.PLAYING)
@@ -65,6 +96,7 @@ class GstBackEnd:
         if msg.type == Gst.MessageType.EOS:
 
             print("End-of-stream")
+
             self.pipeline.send_event(Gst.Event.new_eos())
             self.loop.quit()
 
@@ -411,8 +443,9 @@ class VideoStream:
         self.hls_loc = None
         self.encoder = None
         self.img_array = []
+        if duration != 0:
+            self.Gstobj.set_timer(self.duration)
         self.Gstobj.init()
-
 
     def connect_camera(self, cam):
         if not self.CAMERASRC:
@@ -423,12 +456,12 @@ class VideoStream:
             self.csicam.set_capture_format("NV12")
             self.csicam.set_framerate(20)
             self.csicam.set_flip_method(2)
-            self.csicam.set_timeout(self.duration)
+            #self.csicam.set_timeout(self.duration)
 
     def set_timeout(self, duration):
         if self.CAMERASRC and self.csicam is not None:
             print("Camera settings updated!")
-            self.csicam.set_timeout = duration
+            self.duration = duration
         elif self.CAMERASRC and self.csicam is None:
             print("Cannot complete request because a CSIcamera object has not been connected...ignoring")
         else:
@@ -452,12 +485,15 @@ class VideoStream:
     def start_stream(self):
 
         if self.Gstobj.cycles != 0:
+            if self.duration != 0:
+                self.Gstobj.set_timer(self.duration)
             self.Gstobj.init()
             self.img_array = []
 
         self.create_elements()
+        StreamStatus.LOCAL_BUSY = True
         self.Gstobj.start()
-        StreamBus.KILL_THREAD = False
+        StreamStatus.LOCAL_BUSY = False
         self.cycles += 1
         print("Completed cleanup")
 
@@ -473,7 +509,7 @@ class VideoStream:
         # Setup camera source element if enabled
         if self.CAMERASRC:
             # Create nvarguscamerasrc element
-            videosrc = Gst.ElementFactory.make('nvarguscamerasrc', 'src')
+            videosrc = Gst.ElementFactory.make('nvarguscamerasrc', 'camsrc')
 
             # Set properties for nvarguscamerasrc using linked camera object settings
             for _dict in self.csicam.cam_props:
@@ -481,9 +517,9 @@ class VideoStream:
                     label = _dict["label"]
                     val = _dict["val"]
 
-                    # Do not add "num-buffers" property since it will conflict with "timeout" for video
+                    # Do not add "num-buffers" or "timeout" property for video, timing will be handled by GstObj
                     if val is not None:
-                        if label != "num-buffers":
+                        if label != "num-buffers" and label != "timeout":
                             videosrc.set_property(label, val)
 
             # Create caps for videosrc
@@ -610,7 +646,7 @@ class VideoStream:
         # Add elements to pipeline
         for elem in gst_elements:
             self.Gstobj.pipeline.add(elem)
-            print(elem)
+            #print(elem)
 
         # Link elements
         last = len(gst_elements) - 2
@@ -704,8 +740,14 @@ class ImageStream:
         if self.cycles != 0:
             self.fnames_array = []
 
+        StreamStatus.LOCAL_BUSY = True
         while True:
             self.tnow = time.time()
+
+            if StreamStatus.LOCAL_KILL:
+                StreamStatus.LOCAL_BUSY = False
+                StreamStatus.LOCAL_KILL = False
+                return self.fnames_array
 
             if self.tnow - self.tinit >= self.interval:
                 self.tinit = time.time()
@@ -720,8 +762,10 @@ class ImageStream:
                     self.cycles = 0
                     self.new_start += 1
                     if self.APPSINK:
+                        StreamStatus.LOCAL_BUSY = False
                         return self.img_array
                     elif self.FILESINK:
+                        StreamStatus.LOCAL_BUSY = False
                         return self.fnames_array
 
     def extract_image(self):
@@ -745,7 +789,7 @@ class ImageStream:
         gst_elements = []
 
         # Create nvarguscamerasrc element
-        videosrc = Gst.ElementFactory.make('nvarguscamerasrc', 'src')
+        videosrc = Gst.ElementFactory.make('nvarguscamerasrc', 'camsrc')
 
         # Set properties for nvarguscamerasrc using linked camera object settings
         for _dict in self.csicam.cam_props:
@@ -816,7 +860,7 @@ class ImageStream:
         last = len(gst_elements) - 2
         for i, elem in enumerate(gst_elements):
             if i <= last:
-                print("Linking {} to {}".format(elem, gst_elements[i+1]))
+                #print("Linking {} to {}".format(elem, gst_elements[i+1]))
                 elem.link(gst_elements[i + 1])
             else:
                 break
