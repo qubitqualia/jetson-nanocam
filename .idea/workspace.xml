@@ -19,11 +19,8 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Cleaned up code">
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Temporarily changed package name to prevent conflict with Jetson.GPIO">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Jetson/mediaclient.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/mediaclient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Jetson/nanocam.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/nanocam.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Jetson/networking.py" beforeDir="false" afterPath="$PROJECT_DIR$/Jetson/networking.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -197,7 +194,14 @@
       <option name="project" value="LOCAL" />
       <updated>1594581512043</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Temporarily changed package name to prevent conflict with Jetson.GPIO">
+      <created>1594932120925</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1594932120925</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -229,7 +233,8 @@
     <MESSAGE value="Tested all streaming methods except for OpenCV" />
     <MESSAGE value="Replaced timeout on nvarguscamerasrc with separate timer thread because Gst would not release the camera before its timer expired" />
     <MESSAGE value="Cleaned up code" />
-    <option name="LAST_COMMIT_MESSAGE" value="Cleaned up code" />
+    <MESSAGE value="Temporarily changed package name to prevent conflict with Jetson.GPIO" />
+    <option name="LAST_COMMIT_MESSAGE" value="Temporarily changed package name to prevent conflict with Jetson.GPIO" />
   </component>
   <component name="WindowStateProjectService">
     <state x="412" y="74" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1594475203434">
@@ -272,16 +277,5 @@
       <screen x="69" y="0" width="1607" height="943" />
     </state>
     <state x="792" y="222" width="672" height="678" key="search.everywhere.popup/69.0.1607.943@69.0.1607.943" timestamp="1594499375119" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Jetson/networking.py</url>
-          <line>172</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
