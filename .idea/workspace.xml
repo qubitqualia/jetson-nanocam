@@ -19,8 +19,14 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Temporarily changed package name to prevent conflict with Jetson.GPIO">
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Working version 1.0">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/JetsonNC/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/JetsonNC/globals.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/JetsonNC/mediaclient.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/JetsonNC/nanocam.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/JetsonNC/networking.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/media_client.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,6 +44,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="1eKiVfxh2O3ORhAASSVa00RJHqr" />
@@ -58,7 +69,7 @@
       <recent name="C:\Users\jmatt\PycharmProjects\NanoCam\Jetson" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.udp_media_transfer">
+  <component name="RunManager" selected="Python.media_client">
     <configuration default="true" type="tests" factoryName="Attests">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -77,6 +88,27 @@
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <method />
+    </configuration>
+    <configuration name="media_client" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="gstreamer" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/media_client.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
     </configuration>
     <configuration name="media_test_client" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="gstreamer" />
@@ -122,6 +154,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.media_client" />
         <item itemvalue="Python.udp_media_transfer" />
         <item itemvalue="Python.media_test_client" />
       </list>
@@ -201,7 +234,21 @@
       <option name="project" value="LOCAL" />
       <updated>1594932120925</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Working version 1.0">
+      <created>1595635145882</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1595635145882</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Working version 1.0">
+      <created>1595635169224</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1595635169224</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -234,7 +281,8 @@
     <MESSAGE value="Replaced timeout on nvarguscamerasrc with separate timer thread because Gst would not release the camera before its timer expired" />
     <MESSAGE value="Cleaned up code" />
     <MESSAGE value="Temporarily changed package name to prevent conflict with Jetson.GPIO" />
-    <option name="LAST_COMMIT_MESSAGE" value="Temporarily changed package name to prevent conflict with Jetson.GPIO" />
+    <MESSAGE value="Working version 1.0" />
+    <option name="LAST_COMMIT_MESSAGE" value="Working version 1.0" />
   </component>
   <component name="WindowStateProjectService">
     <state x="412" y="74" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1594475203434">
@@ -253,22 +301,22 @@
       <screen x="69" y="0" width="1607" height="943" />
     </state>
     <state x="698" y="188" key="FileChooserDialogImpl/69.0.1607.943@69.0.1607.943" timestamp="1594484881502" />
-    <state width="1095" height="185" key="GridCell.Tab.0.bottom" timestamp="1594486594493">
+    <state width="1221" height="153" key="GridCell.Tab.0.bottom" timestamp="1595711452774">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1095" height="185" key="GridCell.Tab.0.bottom/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
-    <state width="1095" height="185" key="GridCell.Tab.0.center" timestamp="1594486594493">
+    <state width="1221" height="153" key="GridCell.Tab.0.bottom/69.0.1607.943@69.0.1607.943" timestamp="1595711452774" />
+    <state width="1221" height="153" key="GridCell.Tab.0.center" timestamp="1595711452774">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1095" height="185" key="GridCell.Tab.0.center/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
-    <state width="1095" height="185" key="GridCell.Tab.0.left" timestamp="1594486594493">
+    <state width="1221" height="153" key="GridCell.Tab.0.center/69.0.1607.943@69.0.1607.943" timestamp="1595711452774" />
+    <state width="1221" height="153" key="GridCell.Tab.0.left" timestamp="1595711452774">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1095" height="185" key="GridCell.Tab.0.left/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
-    <state width="1095" height="185" key="GridCell.Tab.0.right" timestamp="1594486594493">
+    <state width="1221" height="153" key="GridCell.Tab.0.left/69.0.1607.943@69.0.1607.943" timestamp="1595711452774" />
+    <state width="1221" height="153" key="GridCell.Tab.0.right" timestamp="1595711452774">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state width="1095" height="185" key="GridCell.Tab.0.right/69.0.1607.943@69.0.1607.943" timestamp="1594486594493" />
+    <state width="1221" height="153" key="GridCell.Tab.0.right/69.0.1607.943@69.0.1607.943" timestamp="1595711452774" />
     <state x="310" y="77" key="SettingsEditor" timestamp="1594076874331">
       <screen x="69" y="0" width="1467" height="864" />
     </state>
