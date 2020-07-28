@@ -19,14 +19,8 @@
     <select />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Working version 1.0">
+    <list default="true" id="38d29b19-7830-46f4-bf9e-83ab519f95a6" name="Default" comment="Renamed package; split media server and client">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/JetsonNC/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/JetsonNC/globals.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/JetsonNC/mediaclient.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/JetsonNC/nanocam.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/JetsonNC/networking.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/media_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/media_client.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -248,7 +242,14 @@
       <option name="project" value="LOCAL" />
       <updated>1595635169224</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Renamed package; split media server and client">
+      <created>1595713211384</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1595713211384</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -282,7 +283,8 @@
     <MESSAGE value="Cleaned up code" />
     <MESSAGE value="Temporarily changed package name to prevent conflict with Jetson.GPIO" />
     <MESSAGE value="Working version 1.0" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working version 1.0" />
+    <MESSAGE value="Renamed package; split media server and client" />
+    <option name="LAST_COMMIT_MESSAGE" value="Renamed package; split media server and client" />
   </component>
   <component name="WindowStateProjectService">
     <state x="412" y="74" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1594475203434">
@@ -297,10 +299,10 @@
       <screen x="69" y="0" width="1607" height="943" />
     </state>
     <state x="602" y="218" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/69.0.1607.943@69.0.1607.943" timestamp="1594388541274" />
-    <state x="698" y="188" key="FileChooserDialogImpl" timestamp="1594484881502">
+    <state x="698" y="188" key="FileChooserDialogImpl" timestamp="1595713248706">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
-    <state x="698" y="188" key="FileChooserDialogImpl/69.0.1607.943@69.0.1607.943" timestamp="1594484881502" />
+    <state x="698" y="188" key="FileChooserDialogImpl/69.0.1607.943@69.0.1607.943" timestamp="1595713248706" />
     <state width="1221" height="153" key="GridCell.Tab.0.bottom" timestamp="1595711452774">
       <screen x="69" y="0" width="1607" height="943" />
     </state>
