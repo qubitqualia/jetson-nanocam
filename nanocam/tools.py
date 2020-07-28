@@ -351,7 +351,7 @@ class VideoStream:
     # "udp":"opencv"  [not tested]
 
     def __init__(self, duration, src=None, sink=None):
-        self.media_path = "/home/justin/media/"
+        self.media_path = ""
         self.CAMERASRC = False
         self.UDPSRC = False
         self.APPSRC = False
@@ -632,7 +632,7 @@ class ImageStream:
     def __init__(self, frames, interval, sink=None):
         self.APPSINK = False
         self.FILESINK = False
-        self.media_path = "/home/justin/media/"
+        self.media_path = ""
         self.fnames_array = []
         self.outfile = ''
 
@@ -643,7 +643,7 @@ class ImageStream:
 
         self.csicam = None
         self.calc_framerate = round(frames/interval)
-        self.tmppath = "/home/justin/media/tmp/"
+        self.tmppath = ""
         self.tmpname = "tmp%05d.jpg"
         self.frames = frames        # Total number of frames to collect
         self.interval = interval    # Interval between frames in seconds
