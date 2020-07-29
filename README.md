@@ -39,7 +39,7 @@ the user will want to use the client/server tools discussed below for handling "
 sink has not yet been tested.
 
 ```python
-vidstream = tools.ImageStream(10, src="camera", sink="file")
+vidstream = tools.VideoStream(10, src="camera", sink="file")
 vidstream.media_path = '/home/media'
 vidstream.connect_camera(cam)
 vidstream.start_stream()
