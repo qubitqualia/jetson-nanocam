@@ -58,7 +58,7 @@ server = mediaserver.MediaServer(7200)
 server.start()
 ```
 This example will setup a media server on a remote Jetson Nano using port 7200 for messaging with clients.  By default, the media transfer port
-used for UDP media uses port 5004.
+used for UDP media is port 5004.
 
 ## Client setup 
 ```python
